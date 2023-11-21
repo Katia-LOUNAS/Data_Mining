@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import math
+import seaborn as sns
 
 
 def load_data(path):
@@ -9,13 +9,26 @@ def load_data(path):
     return(data)
 
 def print_info(data):
-    print("The data is composed of " + str(data.shape[0]) + " rows and " + str(data.shape[1]) + " columns")
-    print("The attribute list for this dataset is :", data.columns)
+    dataset_description = {}
+    dataset_description["Number of rows"] = data.shape[0]
+    dataset_description["Number of colonns"] = data.shape[1]
+    dataset_description["Memory size"] = str(data.memory_usage(index=False).sum() / 1024) + " ko"
+    dataset_description["Data type"] = list(map(str, data.dtypes.unique().tolist()))
+    return dataset_description
+
+def describe_column(data):
+    colonnes_description = []
+    for d in data:
+        colonnes_description.append([d, data[d].count(), str(data.dtypes[d])])
+    return colonnes_description
     
     
 def central_trend(data, column_name):
+    # Filter out non-numeric values
+    numeric_values = pd.to_numeric(data[column_name], errors='coerce').dropna()
+    
     # Sorting the column values
-    sorted_data = data[column_name].sort_values(ascending=True)
+    sorted_data = numeric_values.sort_values(ascending=True)
     
     # Calculate the median
     if len(sorted_data) % 2 == 0:
@@ -23,12 +36,8 @@ def central_trend(data, column_name):
     else:
         median = sorted_data.iloc[len(sorted_data) // 2]
     
-    print(column_name + ':')
-    print("Median:", median)
-    
     # Calculate the mean
     mean = np.mean(sorted_data)
-    print("Mean:", mean)
     
     # Calculate mode
     frequency = {}
@@ -40,41 +49,61 @@ def central_trend(data, column_name):
     
     # Find the value(s) with the highest frequency
     modes = [value for value, freq in frequency.items() if freq == max(frequency.values())]
-    print("Mode(s) values:", modes)
+
+    # Return a dictionary with central tendency measures
+    central_tendency = {
+        'column_name': column_name,
+        'median': median,
+        'mean': mean,
+        'modes': modes
+    }
+
+    return central_tendency
+
+def symetrie(ct):
+    mode = max(ct["Modes"]) if type(ct["Modes"]) == list else ct["Modes"]
+
+    if round(ct["Mean"]) == round(ct["Median"]) == round(mode):
+        return "Distribution symetrique"
+    elif ct["Mean"] < ct["Median"] < mode:
+        return "Distribution d'asymetrie negative"
+    elif ct["Mean"] > ct["Median"] > mode:
+        return "Distribution d'asymetrie positive"
+    else:
+        return "Distribution non identifie"
 
 def quartile(column_data):
     # Sorting the column values
     sorted_data = column_data.sort_values(ascending=True)
-    # Dictionary to store quartile values
-    quartile_dict = {}
+    # List to store quartile values
+    quartile_list = []
     # Calculate Q0 (min)
     Q0 = sorted_data.iloc[0]
-    quartile_dict['Q0'] = Q0
+    quartile_list.append(('Q0', Q0))
     # Calculate Q1
     n = len(sorted_data)
     if n % 4 == 0:
         Q1 = (sorted_data.iloc[n // 4 - 1] + sorted_data.iloc[n // 4]) / 2
     else:
         Q1 = sorted_data.iloc[n // 4]
-    quartile_dict['Q1'] = Q1
+    quartile_list.append(('Q1', Q1))
     # Calculate Q2 (median)
     if n % 2 == 0:
         Q2 = (sorted_data.iloc[n // 2 - 1] + sorted_data.iloc[n // 2]) / 2
     else:
         Q2 = sorted_data.iloc[n // 2]
-    quartile_dict['Q2'] = Q2
+    quartile_list.append(('Q2', Q2))
     # Calculate Q3
     if n % 4 == 0:
         Q3 = (sorted_data.iloc[3 * (n // 4) - 1] + sorted_data.iloc[3 * (n // 4)]) / 2
     else:
         Q3 = sorted_data.iloc[3 * (n // 4)]
-    quartile_dict['Q3'] = Q3
+    quartile_list.append(('Q3', Q3))
     # Calculate Q4 (max)
     Q4 = sorted_data.iloc[n - 1]
-    quartile_dict['Q4'] = Q4
-    # Print the results
-    print(f"Quartile values for the column:\n{quartile_dict}")
-    return quartile_dict         #print(result_dict['Column']['Q1'])  to access to the quaetile
+    quartile_list.append(('Q4', Q4))
+    # Return the results as a list of tuples
+    return quartile_list        
 
 def missing_value(column_data):
     # Dictionary to store missing values and their percentages for the column
@@ -105,10 +134,21 @@ def histogramme(data , attribut):
     plt.ylabel("Y")
     plt.title("Histogramme")
     
-def box_plot(attribut):
+def histogramme_sns(data, attribut, ax):
+    sns.histplot(data[attribut], bins=10, color='b', edgecolor='k', ax=ax)
+    ax.set(xlabel="X", ylabel="Y", title=f'Histogramme {attribut}')
+    
+def box_plot(attribut, title):
     plt.boxplot(attribut)
-    plt.title("Box")
+    plt.title(title)
     plt.show
+    
+from pandas.api.types import is_numeric_dtype
+
+def box_plot_sns(data, attribute, ax):
+    if is_numeric_dtype(data[attribute]):
+        sns.boxplot(x=data[attribute], ax=ax)
+        ax.set_title(f'Box Plot of {attribute}')
 
 
 
