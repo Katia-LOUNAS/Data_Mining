@@ -102,7 +102,6 @@ def quartile(column_data):
     # Calculate Q4 (max)
     Q4 = sorted_data.iloc[n - 1]
     quartile_list.append(('Q4', Q4))
-    # Return the results as a list of tuples
     return quartile_list        
 
 def missing_value(column_data):
@@ -119,7 +118,7 @@ def missing_value(column_data):
     missing_values_dict['Percentage of missing values'] = pourcentage_valeurs_manquantes
     # Print the information
     print(f"Column: {column_data.name}\nNumber of missing values: {nb_valeurs_manquantes}\nPercentage of missing values: {pourcentage_valeurs_manquantes:.2f}%\n")
-    return missing_values_dict     #result_dict['Column']['Percentage of missing values']
+    return nb_valeurs_manquantes, missing_values_dict     #result_dict['Column']['Percentage of missing values']
 
 def Scatter_plot(data, att1 , att2):
 
