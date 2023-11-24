@@ -21,6 +21,18 @@ def describe_column(data):
     for d in data:
         colonnes_description.append([d, data[d].count(), str(data.dtypes[d])])
     return colonnes_description
+
+def missing_values_info(data):
+    missing_values_count = data.isnull().sum()
+    missing_percentage = (missing_values_count / len(data)) * 100
+    
+    missing_info_df = pd.DataFrame({
+        'Column': missing_values_count.index,
+        'Missing_Values_Count': missing_values_count.values,
+        'Missing_Values_Percentage': missing_percentage.values
+    })
+
+    return missing_info_df
     
     
 def central_trend(data, column_name):
@@ -151,7 +163,26 @@ def box_plot_sns(data, attribute, ax):
         ax.set_title(f'Box Plot of {attribute}')
 
 
+def outliers_mean(df,column):
+    Q1 = df[column].quantile(0.25)
+    Q3 = df[column].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    outliers = df[(df[column] < lower_bound) | (df[column] > upper_bound)]
+    if not outliers.empty:
+        df[column][outliers.index] = df[column].mean()
 
+def outliers_drop(df, columns):
+    filtered_df = df.copy()  
+    for column in columns:
+        Q1 = df[column].quantile(0.25)
+        Q3 = df[column].quantile(0.75)
+        IQR = Q3 - Q1
+        lower_bound = Q1 - 1.5 * IQR
+        upper_bound = Q3 + 1.5 * IQR
+        filtered_df = filtered_df[(filtered_df[column] >= lower_bound) & (filtered_df[column] <= upper_bound)]
+    return filtered_df
 
 
 
