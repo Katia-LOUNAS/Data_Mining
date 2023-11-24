@@ -149,12 +149,74 @@ def box_plot_sns(data, attribute, ax):
         sns.boxplot(x=data[attribute], ax=ax)
         ax.set_title(f'Box Plot of {attribute}')
 
+def find_outliers_iqr(column_data):
+    # Get quartiles
+    quartiles = quartile(column_data)
 
+    # Calculate the IQR 
+    iqr = quartiles[3][1] - quartiles[1][1]
 
+    # Lower and upper bounds 
+    lower_bound = quartiles[1][1] - 1.5 * iqr
+    upper_bound = quartiles[3][1] + 1.5 * iqr
 
+    # Find the indices of outliers
+    outliers = column_data[(column_data < lower_bound) | (column_data > upper_bound)].index.tolist()
 
+    return outliers
 
+def find_outliers_zscore(column_data, threshold=3):
+    # Calculate the Z-Score for each observation
+    z_scores = (column_data - column_data.mean()) / column_data.std()
 
+    # Find the indices of outliers based on the Z-Score
+    outliers = z_scores[abs(z_scores) > threshold].index.tolist()
+
+    return outliers
+
+def winsorize(column_data):
+
+    winsorized_column = column_data.copy()
+    quartiles = quartile(winsorized_column)
+
+    # Calculate the winsorization limits
+    lower_limit = quartiles[1][1] - 1.5 * (quartiles[3][1] - quartiles[1][1])
+    upper_limit = quartiles[3][1] + 1.5 * (quartiles[3][1] - quartiles[1][1])
+
+    # Winsorize values below the lower limit
+    winsorized_column[winsorized_column < lower_limit] = lower_limit
+
+    # Winsorize values above the upper limit
+    winsorized_column[winsorized_column > upper_limit] = upper_limit
+
+    return winsorized_column
+
+def min_max_normalize(data):
+    normalized_data = data.copy()
+
+    for column in normalized_data.columns:
+        # Calculate min and max values for the column
+        min_value = normalized_data[column].min()
+        max_value = normalized_data[column].max()
+
+        # Normalize the column using Min-Max scaling
+        normalized_data[column] = (normalized_data[column] - min_value) / (max_value - min_value)
+
+    return normalized_data
+
+def z_score_normalize(data):
+    normalized_data = data.copy()
+
+    for column in normalized_data.columns:
+        # Calculate mean and standard deviation for the column
+        ct_result = central_trend(data, column)
+        mean_value = ct_result['mean']
+        std_dev = normalized_data[column].std()
+
+        # Normalize the column using Z-score scaling
+        normalized_data[column] = (normalized_data[column] - mean_value) / std_dev
+
+    return normalized_data
 
 
 
