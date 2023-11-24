@@ -184,6 +184,16 @@ def outliers_drop(df, columns):
         filtered_df = filtered_df[(filtered_df[column] >= lower_bound) & (filtered_df[column] <= upper_bound)]
     return filtered_df
 
+def moyenne(df,att):
+    return (sum(df[att]) / len(df[att]))
+def med(df,att):
+    col_sorted = sorted(df[att])
+    if len(col_sorted) % 2 != 0:
+        return col_sorted[int(len(col_sorted)//2)]
+    else:
+        s = len(col_sorted)//2
+        return ((col_sorted[s]+col_sorted[s+1])/2)
+
 
 
 
