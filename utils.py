@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+import math
 
 
 def load_data(path):
@@ -219,8 +220,138 @@ def z_score_normalize(data):
     return normalized_data
 
 
+def bins_huntsberger(data):
+    return int(1 + (10 / 3) * math.log10(data.shape[0]))
 
+def equal_width_discretization(data, column_name, label):
+    num_bins = bins_huntsberger(data)
+    
+    # Handle commas as decimal separators and convert to numeric
+    data[column_name] = pd.to_numeric(data[column_name].str.replace(',', '.'), errors='coerce')
 
+    # Copy the original DataFrame to avoid modifying the original data
+    discretized_data = data.copy()
 
+    # Calculate the width of each bin
+    bin_width = (data[column_name].max() - data[column_name].min()) / num_bins
+
+    # Define bin edges and round to a precision
+    bin_edges = [round(data[column_name].min() + i * bin_width, 5) for i in range(num_bins + 1)]
+
+    # Define bin labels
+    if (label == 1):
+        bin_labels = [f'{i + 1}' for i in range(num_bins)]
+    else:
+        bin_labels = [data[column_name].loc[(data[column_name] >= bin_edges[i]) & (data[column_name] < bin_edges[i + 1])].mean() for i in range(num_bins)]
+
+    # Perform discretization using cut function
+    discretized_data['Discretized'] = pd.cut(data[column_name], bins=bin_edges, labels=bin_labels, include_lowest=True)
+
+    return discretized_data
+
+def equal_frequency_discretization(data, column_name, label):
+    num_bins = int(1 + 3.322 * math.log10(data.shape[0]))
+
+    # Check if the column contains numeric values
+    if pd.to_numeric(data[column_name], errors='coerce').notna().all():
+        # Convert the column to string and then handle commas as decimal separators
+        data[column_name] = data[column_name].astype(str).str.replace(',', '.')
+        data[column_name] = pd.to_numeric(data[column_name], errors='coerce')
+    else:
+        # If the column contains non-numeric values, leave it as is
+        pass
+
+    # Copy the original DataFrame to avoid modifying the original data
+    discretized_data = data.copy()
+
+    # Calculate the number of data points per bin
+    points_per_bin = data.shape[0] // num_bins
+
+    # Sort the data
+    sorted_data = data[column_name].sort_values()
+
+    # Define bin edges
+    bin_edges = [sorted_data.iloc[i * points_per_bin] for i in range(num_bins)]
+    bin_edges.append(sorted_data.max())  # Add the maximum value as the last edge
+
+     # Define bin labels
+    if (label == 1):
+        bin_labels = [f'{i + 1}' for i in range(num_bins)]
+    else:
+        bin_labels = [data[column_name].loc[(data[column_name] >= bin_edges[i]) & (data[column_name] < bin_edges[i + 1])].mean() for i in range(num_bins)]
+
+    # Perform discretization using cut function
+    discretized_data['Discretized'] = pd.cut(data[column_name], bins=bin_edges, labels=bin_labels, include_lowest=True)
+
+    return discretized_data
+
+def plot_before_after_discretization(data, column_name, discretized_data, discretized_data2):
+    plt.figure(figsize=(18, 6))
+
+    # Plot before discretization
+    plt.subplot(1, 3, 1)
+    plt.hist(data[column_name], bins=20, color='blue', alpha=0.7)
+    plt.title(f'Before Discretization - {column_name}')
+    plt.xlabel(column_name)
+    plt.ylabel('Frequency')
+
+    # Plot after discretization (equal_width)
+    plt.subplot(1, 3, 2)
+    plt.hist(discretized_data['Discretized'], bins=20, color='green', alpha=0.7)
+    plt.title(f'After Discretization (equal_width) - {column_name}')
+    plt.xlabel('Discretized')
+    plt.ylabel('Frequency')
+
+    # Plot after discretization (equal_frequency)
+    plt.subplot(1, 3, 3)
+    plt.hist(discretized_data2['Discretized'], bins=20, color='orange', alpha=0.7)
+    plt.title(f'After Discretization (equal_frequency) - {column_name}')
+    plt.xlabel('Discretized')
+    plt.ylabel('Frequency')
+
+    plt.tight_layout()
+    plt.show()
         
+import itertools
+
+def calculate_lift(support_A, support_B, support_AB, num_transactions):
+    return (num_transactions * support_AB) / (support_A * support_B)
+
+def calculate_correlation(support_A, support_B, support_AB, num_transactions):
+    if support_A == 0 or support_B == 0 or support_A == num_transactions or support_B == num_transactions:
+        return 0.0  # Return 0 if any of the denominators is zero or equal to the number of transactions
+    correlation = (support_AB * num_transactions - support_A * support_B) / (
+        (num_transactions - support_A) * (num_transactions - support_B) * support_A * support_B) ** 0.5
+    return correlation
+def calculate_cosine_similarity(support_A, support_B, support_AB):
+    return support_AB / ((support_A * support_B) ** 0.5)
+
+def calculate_support(itemset, transactions):
+    count = 0
+    for transaction in transactions:
+        if itemset.issubset(transaction):
+            count += 1
+    return count
+    
+def generate_association_rules(L, min_confidence, transactions):
+    association_rules = []    
+    for itemset in L:
+        itemset_list = list(itemset)
+        for i in range(1, len(itemset_list)):
+            for combination in itertools.combinations(itemset_list, i):
+                A = set(combination)
+                B = itemset - A
+                support_A = calculate_support(A, transactions)
+                support_B = calculate_support(B, transactions)
+                support_AB = calculate_support(itemset, transactions)
+                confidence = support_AB / support_A
+                if confidence >= min_confidence:
+                    lift = (support_AB * len(transactions)) / (support_A * support_B)
+                    correlation = calculate_correlation(support_A, support_B, support_AB, len(transactions))
+                    cosine_similarity = calculate_cosine_similarity(support_A, support_B, support_AB)
+                    rule = (A, B, confidence, lift, correlation, cosine_similarity)
+                    association_rules.append(rule)
+    return association_rules
+
+
         
