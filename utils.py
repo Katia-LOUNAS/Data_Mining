@@ -121,6 +121,17 @@ def missing_value(column_data):
     print(f"Column: {column_data.name}\nNumber of missing values: {nb_valeurs_manquantes}\nPercentage of missing values: {pourcentage_valeurs_manquantes:.2f}%\n")
     return nb_valeurs_manquantes, missing_values_dict     #result_dict['Column']['Percentage of missing values']
 
+def missing_values_info(data):
+    missing_values_count = data.isnull().sum()
+    missing_percentage = (missing_values_count / len(data)) * 100
+    
+    missing_info_df = pd.DataFrame({
+        'Column': missing_values_count.index,
+        'Missing_Values_Count': missing_values_count.values,
+        'Missing_Values_Percentage': missing_percentage.values
+    })
+
+    return missing_info_df
 def Scatter_plot(data, att1 , att2):
 
     plt.scatter(data[att1],data[att2], marker='o')
@@ -353,5 +364,36 @@ def generate_association_rules(L, min_confidence, transactions):
                     association_rules.append(rule)
     return association_rules
 
+
+def outliers_mean(df,column):
+    Q1 = df[column].quantile(0.25)
+    Q3 = df[column].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    outliers = df[(df[column] < lower_bound) | (df[column] > upper_bound)]
+    if not outliers.empty:
+        df[column][outliers.index] = df[column].mean()
+
+def outliers_drop(df, columns):
+    filtered_df = df.copy()  
+    for column in columns:
+        Q1 = df[column].quantile(0.25)
+        Q3 = df[column].quantile(0.75)
+        IQR = Q3 - Q1
+        lower_bound = Q1 - 1.5 * IQR
+        upper_bound = Q3 + 1.5 * IQR
+        filtered_df = filtered_df[(filtered_df[column] >= lower_bound) & (filtered_df[column] <= upper_bound)]
+    return filtered_df
+
+def moyenne(df,att):
+    return (sum(df[att]) / len(df[att]))
+def med(df,att):
+    col_sorted = sorted(df[att])
+    if len(col_sorted) % 2 != 0:
+        return col_sorted[int(len(col_sorted)//2)]
+    else:
+        s = len(col_sorted)//2
+        return ((col_sorted[s]+col_sorted[s+1])/2)
 
         
