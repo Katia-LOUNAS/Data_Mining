@@ -1,0 +1,8 @@
+Soil,Fertilizer
+Clayey,"{'Urea', 'MOP', 'DAP', 'Good NPK'}"
+alluvial,"{'Urea', 'MOP', 'DAP'}"
+clay loam,"{'Urea', 'MOP', 'DAP', 'Good NPK'}"
+coastal,"{'Urea', 'Good NPK', 'DAP', 'MOP'}"
+laterite,"{'Urea', 'Good NPK', 'DAP', 'MOP'}"
+sandy,"{'Urea', 'Good NPK', 'DAP', 'MOP'}"
+silty clay,"{'Urea', 'MOP', 'DAP', 'Good NPK'}"
