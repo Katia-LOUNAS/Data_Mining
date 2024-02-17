@@ -5,7 +5,7 @@ This repository contains a data mining software developed from scratch for a uni
 It is divided into two parts: data analysis, preprocessing, and visualization; and supervised and unsupervised learning.
 
 ## Part 1: Data Analysis, Preprocessing, and Visualization
-In this part, we analyze, preprocess, and visualize two datasets ([Dataset 1](https://drive.google.com/file/d/1zcNeHEEoi9XmpPYcUKTqRB_VngeQGZEK/view) and Dataset 2). We also extract frequent patterns and association rules from a third dataset (Dataset 3).
+In this part, we analyze, preprocess, and visualize two datasets ([Dataset 1](https://drive.google.com/file/d/1zcNeHEEoi9XmpPYcUKTqRB_VngeQGZEK/view) and [Dataset 2](https://drive.google.com/file/d/1CQMBEUzL8g39Cpost4D5_6a_mraOlFNP/view)). We also extract frequent patterns and association rules from a third dataset ([Dataset 3](https://docs.google.com/spreadsheets/d/1DDUltRw8dDUIuNUTaSxdChr4Xdi0FMyV/edit#gid=750806171)).
 
 ### Dataset 1 and 2: Analysis, Preprocessing, and Visualization
 In this part, we process two types of data: static and time series.
